@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String          @id @default(cuid())
+  email                  String          @unique
+  password               String
+  firstName              String
+  lastName               String
+  skillsProficient       Skill[]         @relation("ProficientSkills")
+  skillsToLearn          Skill[]         @relation("LearningSkills")
+  matchesAsUser1         Match[]         @relation("MatchesUser1")
+  matchesAsUser2         Match[]         @relation("MatchesUser2")
+  sentFriendRequests     FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
+  friends                Friend[]        @relation("UserFriends")
+  friendOf               Friend[]        @relation("FriendOf")
+}
+
+model Skill {
+  id              String  @id @default(cuid())
+  name            String  @unique
+  usersProficient User[]  @relation("ProficientSkills")
+  usersLearning   User[]  @relation("LearningSkills")
+  match           Match[]
+}
+
+model Match {
+  id      String  @id @default(cuid())
+  user1Id String
+  user2Id String
+  user1   User    @relation("MatchesUser1", fields: [user1Id], references: [id])
+  user2   User    @relation("MatchesUser2", fields: [user2Id], references: [id])
+  skills  Skill[]
+}
+
+model FriendRequest {
+  id         String @id @default(cuid())
+  senderId   String
+  receiverId String
+  sender     User   @relation("SentFriendRequests", fields: [senderId], references: [id])
+  receiver   User   @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
+}
+
+model Friend {
+  id       String @id @default(cuid())
+  userId   String
+  friendId String
+  user     User   @relation("UserFriends", fields: [userId], references: [id])
+  friend   User   @relation("FriendOf", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+  @@unique([friendId, userId])
+}
