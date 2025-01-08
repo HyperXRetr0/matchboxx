@@ -19,6 +19,8 @@ exports.getUserById = getUserById;
 exports.updateUserSkills = updateUserSkills;
 exports.getCurrentUser = getCurrentUser;
 exports.updateUser = updateUser;
+exports.getUserSkills = getUserSkills;
+exports.deleteUserSkill = deleteUserSkill;
 const client_1 = __importDefault(require("../PrismaClient/client"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -211,17 +213,23 @@ function updateUserSkills(req, res) {
                 });
                 return;
             }
-            yield client_1.default.user.update({
-                where: { id },
-                data: {
-                    skillsProficient: {
-                        connect: skillsProficient.map((skillId) => ({ id: skillId })),
-                    },
-                    skillsToLearn: {
-                        connect: skillsToLearn.map((skillId) => ({ id: skillId })),
-                    },
-                },
-            });
+            const data = {};
+            if ((skillsProficient === null || skillsProficient === void 0 ? void 0 : skillsProficient.length) > 0) {
+                data.skillsProficient = {
+                    connect: skillsProficient.map((skillId) => ({ id: skillId })),
+                };
+            }
+            if ((skillsToLearn === null || skillsToLearn === void 0 ? void 0 : skillsToLearn.length) > 0) {
+                data.skillsToLearn = {
+                    connect: skillsToLearn.map((skillId) => ({ id: skillId })),
+                };
+            }
+            if (Object.keys(data).length > 0) {
+                yield client_1.default.user.update({
+                    where: { id },
+                    data,
+                });
+            }
             res.status(200).json({
                 success: true,
                 message: "User updated successfully.",
@@ -293,6 +301,97 @@ function updateUser(req, res) {
             res.status(201).json({
                 success: true,
                 message: "User updated successfully.",
+            });
+            return;
+        }
+        catch (error) {
+            console.error(error);
+            res.status(500).json({
+                success: false,
+                message: "Internal server error.",
+            });
+            return;
+        }
+    });
+}
+function getUserSkills(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const id = req.userId;
+            if (!id) {
+                console.log("User not authorized.");
+                res.status(401).json({
+                    success: false,
+                    message: "User not authorized.",
+                });
+                return;
+            }
+            const skills = yield client_1.default.user.findFirst({
+                where: { id },
+                select: {
+                    skillsProficient: true,
+                    skillsToLearn: true,
+                },
+            });
+            res.status(200).json({
+                success: true,
+                data: skills,
+            });
+            return;
+        }
+        catch (error) {
+            console.error(error);
+            res.status(500).json({
+                success: false,
+                message: "Internal server error.",
+            });
+            return;
+        }
+    });
+}
+function deleteUserSkill(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const id = req.userId;
+            if (!id) {
+                console.log("User not authorized.");
+                res.status(401).json({
+                    success: false,
+                    message: "User not authorized.",
+                });
+                return;
+            }
+            const { skillsProficientToRemove, skillsToLearnToRemove, } = req.body;
+            if (!skillsProficientToRemove && !skillsToLearnToRemove) {
+                console.log("No skill to delete.");
+                res.status(400).json({
+                    success: false,
+                    message: "No skill to delete.",
+                });
+                return;
+            }
+            const data = {};
+            if (skillsProficientToRemove && (skillsProficientToRemove === null || skillsProficientToRemove === void 0 ? void 0 : skillsProficientToRemove.length) > 0) {
+                data.skillsProficient = {
+                    disconnect: skillsProficientToRemove.map((skillId) => ({
+                        id: skillId,
+                    })),
+                };
+            }
+            if (skillsToLearnToRemove && (skillsToLearnToRemove === null || skillsToLearnToRemove === void 0 ? void 0 : skillsToLearnToRemove.length) > 0) {
+                data.skillsToLearn = {
+                    disconnect: skillsToLearnToRemove.map((skillId) => ({ id: skillId })),
+                };
+            }
+            if (Object.keys(data).length > 0) {
+                yield client_1.default.user.update({
+                    where: { id },
+                    data,
+                });
+            }
+            res.status(200).json({
+                success: true,
+                message: "Skills deleted successfully.",
             });
             return;
         }
