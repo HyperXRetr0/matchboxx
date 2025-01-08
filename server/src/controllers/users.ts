@@ -166,7 +166,7 @@ export async function getUserById(req: Request, res: Response) {
   }
 }
 
-export async function updateUser(req: Request, res: Response) {
+export async function updateUserSkills(req: Request, res: Response) {
   try {
     const {
       skillsProficient,
@@ -235,6 +235,40 @@ export async function getCurrentUser(req: Request, res: Response) {
     res.status(200).json({
       success: true,
       data: user,
+    });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+    return;
+  }
+}
+
+export async function updateUser(req: Request, res: Response) {
+  try {
+    const id = req.userId;
+    if (!id) {
+      console.log("User not authorized.");
+      res.status(401).json({
+        success: false,
+        message: "User not authorized.",
+      });
+      return;
+    }
+    const userData: Partial<Pick<User, "email" | "firstName" | "lastName">> =
+      req.body;
+    await client.user.update({
+      where: {
+        id,
+      },
+      data: { ...userData },
+    });
+    res.status(201).json({
+      success: true,
+      message: "User updated successfully.",
     });
     return;
   } catch (error) {

@@ -16,8 +16,9 @@ exports.createUser = createUser;
 exports.signin = signin;
 exports.getAllUsers = getAllUsers;
 exports.getUserById = getUserById;
-exports.updateUser = updateUser;
+exports.updateUserSkills = updateUserSkills;
 exports.getCurrentUser = getCurrentUser;
+exports.updateUser = updateUser;
 const client_1 = __importDefault(require("../PrismaClient/client"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -188,7 +189,7 @@ function getUserById(req, res) {
         }
     });
 }
-function updateUser(req, res) {
+function updateUserSkills(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { skillsProficient, skillsToLearn, } = req.body;
@@ -257,6 +258,41 @@ function getCurrentUser(req, res) {
             res.status(200).json({
                 success: true,
                 data: user,
+            });
+            return;
+        }
+        catch (error) {
+            console.error(error);
+            res.status(500).json({
+                success: false,
+                message: "Internal server error.",
+            });
+            return;
+        }
+    });
+}
+function updateUser(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const id = req.userId;
+            if (!id) {
+                console.log("User not authorized.");
+                res.status(401).json({
+                    success: false,
+                    message: "User not authorized.",
+                });
+                return;
+            }
+            const userData = req.body;
+            yield client_1.default.user.update({
+                where: {
+                    id,
+                },
+                data: Object.assign({}, userData),
+            });
+            res.status(201).json({
+                success: true,
+                message: "User updated successfully.",
             });
             return;
         }

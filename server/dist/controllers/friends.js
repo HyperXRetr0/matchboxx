@@ -27,7 +27,7 @@ function getAllFriends(req, res) {
                 });
                 return;
             }
-            const friends = yield client_1.default.friend.findFirst({
+            const friends = yield client_1.default.friend.findMany({
                 where: {
                     userId: id,
                 },
