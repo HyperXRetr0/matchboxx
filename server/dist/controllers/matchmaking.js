@@ -54,25 +54,22 @@ function startMatchmaking(req, res) {
                         skillsToLearn: true,
                     },
                 });
-            })));
-            if (!otherUsers) {
+            }))).then((results) => results.filter((user) => !!user));
+            if (!otherUsers.length) {
                 res.status(404).json({
                     success: false,
                     message: "No other users found",
                 });
                 return;
             }
-            function hasIntersection(arr1, arr2) {
-                return arr1.some((skill) => arr2.includes(skill));
-            }
             const matchedUserIds = otherUsers.reduce((acc, user) => {
-                const userId = user === null || user === void 0 ? void 0 : user.id;
-                const userProficientSkills = user === null || user === void 0 ? void 0 : user.skillsProficient.map((skill) => skill.id);
-                const userSkillsToLearn = user === null || user === void 0 ? void 0 : user.skillsToLearn.map((skill) => skill.id);
-                const learnSkillsMatch = hasIntersection(currentUser.skillsToLearn.map((s) => s.id), userProficientSkills ? userProficientSkills : []);
-                const proficientSkillsMatch = hasIntersection(currentUser.skillsProficient.map((s) => s.id), userSkillsToLearn ? userSkillsToLearn : []);
+                const userId = user.id;
+                const userProficientSkills = user.skillsProficient.map((skill) => skill.id);
+                const userSkillsToLearn = user.skillsToLearn.map((skill) => skill.id);
+                const learnSkillsMatch = (0, utils_1.hasIntersection)(currentUser.skillsToLearn.map((s) => s.id), userProficientSkills);
+                const proficientSkillsMatch = (0, utils_1.hasIntersection)(currentUser.skillsProficient.map((s) => s.id), userSkillsToLearn);
                 if (learnSkillsMatch || proficientSkillsMatch) {
-                    acc.push(userId ? userId : "");
+                    acc.push(userId);
                 }
                 return acc;
             }, []);

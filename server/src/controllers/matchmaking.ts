@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import client from "../PrismaClient/client";
-import { clients } from "../utils/utils";
+import { clients, hasIntersection } from "../utils/utils";
 import { getUserSkills } from "./users";
 import { Skill, User } from "@prisma/client";
 
@@ -58,9 +58,7 @@ export async function startMatchmaking(req: Request, res: Response) {
       });
       return;
     }
-    function hasIntersection(arr1: string[], arr2: string[]): boolean {
-      return arr1.some((skill) => arr2.includes(skill));
-    }
+
     const matchedUserIds = otherUsers.reduce<string[]>((acc, user) => {
       const userId = user.id;
       const userProficientSkills = user.skillsProficient.map(
