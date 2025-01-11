@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import client from "../PrismaClient/client";
 import { clients, hasIntersection } from "../utils/utils";
-import { getUserSkills } from "./users";
 import { Skill, User } from "@prisma/client";
 
 type ModifiedUser = User & {
@@ -80,9 +79,8 @@ export async function startMatchmaking(req: Request, res: Response) {
     }, []);
     res.status(200).json({
       success: true,
-      data: matchedUserIds,
+      data: matchedUserIds[0],
     });
-    return;
     return;
   } catch (error) {
     console.error(error);

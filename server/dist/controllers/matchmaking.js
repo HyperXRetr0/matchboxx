@@ -73,11 +73,11 @@ function startMatchmaking(req, res) {
                 }
                 return acc;
             }, []);
+            matchedUserIds.push("RandomId");
             res.status(200).json({
                 success: true,
                 data: matchedUserIds,
             });
-            return;
             return;
         }
         catch (error) {

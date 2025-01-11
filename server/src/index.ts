@@ -23,10 +23,44 @@ const server = app.listen(process.env.PORT, () => {
 
 const wss = new WebSocketServer({ server });
 
+type MessageType = {
+  type: "chat" | "notify";
+  payload: {
+    recipientId: string;
+    message: string;
+  };
+};
+
 wss.on("connection", (socket, req) => {
   const userId = req.url?.split("?id=")[1];
   if (!userId) return;
   clients.set(userId, socket);
+  socket.on("message", (data) => {
+    const parsedMessage: MessageType = JSON.parse(data.toString());
+    const { type, payload } = parsedMessage;
+    const { recipientId, message } = payload;
+    const recipientSocket = clients.get(recipientId);
+    if (!recipientSocket) {
+      console.log("User not disconnected!");
+      return;
+    }
+    switch (type) {
+      case "chat":
+        recipientSocket.send(
+          JSON.stringify({ senderId: recipientId, message })
+        );
+        break;
+      case "notify":
+        socket.send(
+          JSON.stringify({ sender: server, message: "Match Found..." })
+        );
+        recipientSocket.send(
+          JSON.stringify({ sender: server, message: "Match Found..." })
+        );
+      default:
+        console.log("Unknown message type");
+    }
+  });
   socket.on("close", () => {
     clients.delete(userId);
   });

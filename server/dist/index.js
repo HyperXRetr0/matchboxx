@@ -30,6 +30,26 @@ wss.on("connection", (socket, req) => {
     if (!userId)
         return;
     utils_1.clients.set(userId, socket);
+    socket.on("message", (data) => {
+        const parsedMessage = JSON.parse(data.toString());
+        const { type, payload } = parsedMessage;
+        const { recipientId, message } = payload;
+        const recipientSocket = utils_1.clients.get(recipientId);
+        if (!recipientSocket) {
+            console.log("User not disconnected!");
+            return;
+        }
+        switch (type) {
+            case "chat":
+                recipientSocket.send(JSON.stringify({ senderId: recipientId, message }));
+                break;
+            case "notify":
+                socket.send(JSON.stringify({ sender: server, message: "Match Found..." }));
+                recipientSocket.send(JSON.stringify({ sender: server, message: "Match Found..." }));
+            default:
+                console.log("Unknown message type");
+        }
+    });
     socket.on("close", () => {
         utils_1.clients.delete(userId);
     });
